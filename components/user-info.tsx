@@ -81,7 +81,7 @@ export function UserInfo() {
 
     const handleLogout = useCallback(() => {
         clearUser()
-        router.push('/welcome')
+        router.replace('/welcome')
     }, [clearUser, router])
 
     if (!user) return null

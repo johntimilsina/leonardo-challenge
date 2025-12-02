@@ -11,38 +11,44 @@ interface PaginationProps {
     basePath: string
 }
 
+function getPageUrl(basePath: string, page: number): string {
+    return `${basePath}/${page}`
+}
+
 export function Pagination({ info, currentPage, basePath }: PaginationProps) {
     const totalPages = info.pages ?? 1
-    const hasPrev = info.prev !== null && info.prev !== undefined
-    const hasNext = info.next !== null && info.next !== undefined
+    const hasPrev = currentPage > 1
+    const hasNext = currentPage < totalPages
 
     const getPageNumbers = (): (number | 'ellipsis')[] => {
         const pages: (number | 'ellipsis')[] = []
-        const showPages = 5 // Max pages to show
-        const halfShow = Math.floor(showPages / 2)
+        const maxVisible = 5
 
-        let start = Math.max(1, currentPage - halfShow)
-        const end = Math.min(totalPages, start + showPages - 1)
-
-        if (end - start < showPages - 1) {
-            start = Math.max(1, end - showPages + 1)
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i)
+            }
+            return pages
         }
 
-        if (start > 1) {
-            pages.push(1)
-            if (start > 2) pages.push('ellipsis')
+        pages.push(1)
+
+        const start = Math.max(2, currentPage - 1)
+        const end = Math.min(totalPages - 1, currentPage + 1)
+
+        if (start > 2) {
+            pages.push('ellipsis')
         }
 
         for (let i = start; i <= end; i++) {
-            if (i !== 1 && i !== totalPages) {
-                pages.push(i)
-            }
+            pages.push(i)
         }
 
-        if (end < totalPages) {
-            if (end < totalPages - 1) pages.push('ellipsis')
-            pages.push(totalPages)
+        if (end < totalPages - 1) {
+            pages.push('ellipsis')
         }
+
+        pages.push(totalPages)
 
         return pages
     }
@@ -62,7 +68,7 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                 aria-label="Go to previous page"
             >
                 {hasPrev ? (
-                    <Link href={`${basePath}?page=${currentPage - 1}`}>
+                    <Link href={getPageUrl(basePath, currentPage - 1)}>
                         <ChevronLeft className="h-4 w-4" />
                     </Link>
                 ) : (
@@ -85,20 +91,16 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                     ) : (
                         <Button
                             key={page}
-                            variant={
-                                page === currentPage ? 'default' : 'outline'
-                            }
+                            variant={page === currentPage ? 'default' : 'outline'}
                             size="icon"
                             asChild={page !== currentPage}
                             aria-label={`Go to page ${page}`}
-                            aria-current={
-                                page === currentPage ? 'page' : undefined
-                            }
+                            aria-current={page === currentPage ? 'page' : undefined}
                         >
                             {page === currentPage ? (
                                 <span>{page}</span>
                             ) : (
-                                <Link href={`${basePath}?page=${page}`}>
+                                <Link href={getPageUrl(basePath, page)}>
                                     {page}
                                 </Link>
                             )}
@@ -119,7 +121,7 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                 aria-label="Go to next page"
             >
                 {hasNext ? (
-                    <Link href={`${basePath}?page=${currentPage + 1}`}>
+                    <Link href={getPageUrl(basePath, currentPage + 1)}>
                         <ChevronRight className="h-4 w-4" />
                     </Link>
                 ) : (

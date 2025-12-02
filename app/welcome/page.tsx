@@ -27,7 +27,7 @@ export default function WelcomePage() {
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            router.replace('/information')
+            router.replace('/information/1')
         }
     }, [isLoading, isAuthenticated, router])
 
@@ -64,7 +64,7 @@ export default function WelcomePage() {
                 jobTitle: jobTitle.trim(),
             })
 
-            router.push('/information')
+            router.push('/information/1')
         },
         [username, jobTitle, validateForm, saveUser, router]
     )

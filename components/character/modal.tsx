@@ -1,14 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { MapPin, Globe, User2, Dna } from 'lucide-react'
-import type { Character } from '@/lib/graphql'
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
+import { MapPin, Globe, User2, Tv } from 'lucide-react'
+import { useQuery } from '@apollo/client/react'
+import { GET_CHARACTER } from '@/lib/graphql'
+import type { Character, GetCharacterQuery } from '@/lib/graphql'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface CharacterModalProps {
     character: Character | null
@@ -16,84 +14,142 @@ interface CharacterModalProps {
 }
 
 export function CharacterModal({ character, onClose }: CharacterModalProps) {
-    if (!character) return null
+    const { data, loading } = useQuery<GetCharacterQuery>(GET_CHARACTER, {
+        variables: { id: character?.id },
+        skip: !character?.id,
+    })
+
+    const fullCharacter = data?.character
+    const isOpen = !!character
 
     const statusConfig = {
-        Alive: { bg: 'bg-emerald-500', text: 'text-emerald-600' },
-        Dead: { bg: 'bg-red-500', text: 'text-red-600' },
-        unknown: { bg: 'bg-gray-400', text: 'text-gray-600' },
+        Alive: { bg: 'bg-emerald-500' },
+        Dead: { bg: 'bg-red-500' },
+        unknown: { bg: 'bg-gray-400' },
     }
 
-    const status =
-        statusConfig[character.status as keyof typeof statusConfig] ||
-        statusConfig.unknown
+    const displayCharacter = fullCharacter || character
+    const status = displayCharacter
+        ? statusConfig[displayCharacter.status as keyof typeof statusConfig] ||
+          statusConfig.unknown
+        : statusConfig.unknown
+
+    const episodes = fullCharacter?.episode?.filter(Boolean) || []
+    const displayEpisodes = episodes.slice(0, 6)
+    const remainingCount = episodes.length - displayEpisodes.length
 
     return (
-        <Dialog open={!!character} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-                <div className="relative">
-                    {character.image && (
-                        <div className="relative aspect-square w-full">
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
+                <DialogTitle className="sr-only">
+                    {displayCharacter?.name ?? 'Character Details'}
+                </DialogTitle>
+                <div className="flex flex-col sm:flex-row">
+                    {/* Left: Image */}
+                    <div className="relative w-full sm:w-72 flex-shrink-0 aspect-square sm:aspect-auto sm:min-h-[400px]">
+                        {displayCharacter?.image ? (
                             <Image
-                                src={character.image}
-                                alt={character.name ?? 'Character'}
+                                src={displayCharacter.image}
+                                alt={displayCharacter.name ?? 'Character'}
                                 fill
                                 className="object-cover"
                                 priority
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        ) : (
+                            <Skeleton className="w-full h-full" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
+                        <div className="absolute top-3 left-3">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 backdrop-blur-sm shadow-sm">
+                                <span className={`h-2 w-2 rounded-full ${status.bg}`} />
+                                {displayCharacter?.status ?? 'Unknown'}
+                            </span>
                         </div>
-                    )}
-
-                    <div className="absolute top-4 left-4">
-                        <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-white/95 backdrop-blur-sm shadow-sm`}
-                        >
-                            <span className={`h-2.5 w-2.5 rounded-full ${status.bg}`} />
-                            {character.status}
-                        </span>
-                    </div>
-
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <DialogHeader className="text-left">
-                            <DialogTitle className="text-2xl font-bold text-white">
-                                {character.name}
-                            </DialogTitle>
-                            <p className="text-white/80 text-sm mt-1">
-                                {character.species}
-                                {character.type && ` • ${character.type}`}
+                        {/* Mobile name overlay */}
+                        <div className="absolute bottom-3 left-3 right-3 sm:hidden">
+                            <h2 className="text-xl font-bold text-white">
+                                {displayCharacter?.name ?? 'Loading...'}
+                            </h2>
+                            <p className="text-sm text-white/80 mt-0.5">
+                                {displayCharacter?.species}
                             </p>
-                        </DialogHeader>
-                    </div>
-                </div>
-
-                <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <DetailItem
-                            icon={<User2 className="h-4 w-4" />}
-                            label="Gender"
-                            value={character.gender}
-                        />
-                        <DetailItem
-                            icon={<Dna className="h-4 w-4" />}
-                            label="Species"
-                            value={character.species}
-                        />
+                        </div>
                     </div>
 
-                    <div className="pt-2 space-y-3">
-                        <DetailItem
-                            icon={<Globe className="h-4 w-4" />}
-                            label="Origin"
-                            value={character.origin?.name}
-                            fullWidth
-                        />
-                        <DetailItem
-                            icon={<MapPin className="h-4 w-4" />}
-                            label="Last Known Location"
-                            value={character.location?.name}
-                            fullWidth
-                        />
+                    {/* Right: Details */}
+                    <div className="flex-1 p-5 overflow-y-auto max-h-[50vh] sm:max-h-[450px]">
+                        {/* Header - desktop only */}
+                        <div className="mb-4 hidden sm:block">
+                            <h2 className="text-xl font-bold">
+                                {displayCharacter?.name ?? 'Loading...'}
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                                {displayCharacter?.species}
+                                {displayCharacter?.type && ` • ${displayCharacter.type}`}
+                            </p>
+                        </div>
+
+                        {/* Info Grid */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <DetailItem
+                                icon={<User2 className="h-3.5 w-3.5" />}
+                                label="Gender"
+                                value={displayCharacter?.gender}
+                            />
+                            <DetailItem
+                                icon={<Globe className="h-3.5 w-3.5" />}
+                                label="Origin"
+                                value={displayCharacter?.origin?.name}
+                            />
+                            <DetailItem
+                                icon={<MapPin className="h-3.5 w-3.5" />}
+                                label="Location"
+                                value={displayCharacter?.location?.name}
+                                className="col-span-2"
+                            />
+                        </div>
+
+                        {/* Episodes */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Tv className="h-3.5 w-3.5 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">
+                                    Episodes{' '}
+                                    <span className="font-normal text-muted-foreground">
+                                        ({loading ? '...' : episodes.length})
+                                    </span>
+                                </h3>
+                            </div>
+
+                            <div className="space-y-1.5 min-h-[140px]">
+                                {loading ? (
+                                    Array.from({ length: 6 }).map((_, i) => (
+                                        <Skeleton key={i} className="h-7" />
+                                    ))
+                                ) : (
+                                    <>
+                                        {displayEpisodes.map((ep) => (
+                                            <div
+                                                key={ep?.id}
+                                                className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/50 text-sm"
+                                            >
+                                                <span className="font-medium text-primary text-xs">
+                                                    {ep?.episode}
+                                                </span>
+                                                <span className="text-muted-foreground truncate text-xs">
+                                                    {ep?.name}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {remainingCount > 0 && (
+                                            <p className="text-xs text-muted-foreground pt-1">
+                                                +{remainingCount} more episodes
+                                            </p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </DialogContent>
@@ -105,20 +161,18 @@ interface DetailItemProps {
     icon: React.ReactNode
     label: string
     value: string | null | undefined
-    fullWidth?: boolean
+    className?: string
 }
 
-function DetailItem({ icon, label, value, fullWidth }: DetailItemProps) {
+function DetailItem({ icon, label, value, className }: DetailItemProps) {
     return (
-        <div
-            className={`flex items-start gap-3 ${fullWidth ? 'p-3 rounded-lg bg-muted/50' : ''}`}
-        >
+        <div className={`flex items-start gap-2 ${className ?? ''}`}>
             <div className="text-muted-foreground mt-0.5">{icon}</div>
             <div className="min-w-0 flex-1">
-                <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <dt className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                     {label}
                 </dt>
-                <dd className="mt-0.5 text-sm font-medium truncate">
+                <dd className="text-sm font-medium truncate">
                     {value ?? 'Unknown'}
                 </dd>
             </div>
