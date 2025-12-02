@@ -70,14 +70,14 @@ export function WelcomeForm() {
     )
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
-            <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
-                    <div className="text-4xl mb-2">🛸</div>
-                    <CardTitle className="text-2xl">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/10 via-background to-primary/5">
+            <Card className="w-full max-w-md border-border/50 shadow-xl">
+                <CardHeader className="text-center space-y-4 pb-2">
+                    <div className="text-5xl">🛸</div>
+                    <CardTitle className="text-2xl font-semibold">
                         Welcome to Rick and Morty Explorer
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-base">
                         Enter your information to start exploring characters
                         from across the multiverse
                     </CardDescription>
@@ -133,7 +133,7 @@ export function WelcomeForm() {
                             )}
                         </div>
 
-                        <Button type="submit" className="w-full">
+                        <Button type="submit" className="w-full h-11 font-medium">
                             Start Exploring
                         </Button>
                     </form>

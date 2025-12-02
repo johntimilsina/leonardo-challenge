@@ -1,25 +1,42 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
-import { MapPin, Globe, User2, Tv } from 'lucide-react'
+import { MapPin, Globe, User2, Tv, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useQuery } from '@apollo/client/react'
 import { GET_CHARACTER } from '@/lib/graphql'
 import type { Character, GetCharacterQuery } from '@/lib/graphql'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 
 interface CharacterModalProps {
     /** Character to display, null to close modal */
     character: Character | null
     /** Callback when modal is closed */
     onClose: () => void
+    /** Callback to navigate to previous character */
+    onPrevious?: () => void
+    /** Callback to navigate to next character */
+    onNext?: () => void
+    /** Whether there is a previous character */
+    hasPrevious?: boolean
+    /** Whether there is a next character */
+    hasNext?: boolean
 }
 
 /**
  * Modal dialog displaying detailed character information including episodes.
  * Fetches additional character data (episodes) when opened.
  */
-export function CharacterModal({ character, onClose }: CharacterModalProps) {
+export function CharacterModal({ 
+    character, 
+    onClose, 
+    onPrevious, 
+    onNext,
+    hasPrevious = false,
+    hasNext = false 
+}: CharacterModalProps) {
+    const [loadedImageId, setLoadedImageId] = useState<string | null>(null)
     const { data, loading } = useQuery<GetCharacterQuery>(GET_CHARACTER, {
         variables: { id: character?.id },
         skip: !character?.id,
@@ -27,6 +44,7 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
 
     const fullCharacter = data?.character
     const isOpen = !!character
+    const imageLoading = character?.id !== loadedImageId
 
     const statusConfig = {
         Alive: { bg: 'bg-emerald-500' },
@@ -41,129 +59,190 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
         : statusConfig.unknown
 
     const episodes = fullCharacter?.episode?.filter(Boolean) || []
-    const displayEpisodes = episodes.slice(0, 6)
-    const remainingCount = episodes.length - displayEpisodes.length
 
-    // Always show exactly 6 episode slots to prevent layout shift
-    const EPISODE_SLOTS = 6
-    const episodeSlots = Array.from({ length: EPISODE_SLOTS }, (_, i) => displayEpisodes[i] || null)
+    if (!isOpen) return null
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-2xl !p-0 !gap-0 overflow-hidden border-0">
-                <DialogTitle className="sr-only">
-                    {displayCharacter?.name ?? 'Character Details'}
-                </DialogTitle>
-                <div className="flex flex-col sm:flex-row sm:h-[420px]">
-                    {/* Left: Image */}
-                    <div className="relative w-full sm:w-72 flex-shrink-0 h-52 sm:h-full bg-muted overflow-hidden rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none">
-                        {displayCharacter?.image ? (
-                            <Image
-                                src={displayCharacter.image}
-                                alt={displayCharacter.name ?? 'Character'}
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 640px) 100vw, 288px"
-                                quality={100}
-                                priority
-                            />
-                        ) : (
-                            <Skeleton className="w-full h-full" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                        <div className="absolute top-3 left-3">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 backdrop-blur-sm shadow-sm">
-                                <span className={`h-2 w-2 rounded-full ${status.bg}`} />
-                                {displayCharacter?.status ?? 'Unknown'}
-                            </span>
-                        </div>
-                        {/* Mobile name overlay */}
-                        <div className="absolute bottom-3 left-3 right-3 sm:hidden">
-                            <h2 className="text-xl font-bold text-white">
-                                {displayCharacter?.name ?? 'Loading...'}
-                            </h2>
-                            <p className="text-sm text-white/80 mt-0.5">
-                                {displayCharacter?.species}
-                            </p>
-                        </div>
-                    </div>
+        <>
+            {/* Backdrop */}
+            <div 
+                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in-0"
+                onClick={onClose}
+            />
+            
+            {/* Modal Content */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+                {/* Navigation Arrows - Desktop */}
+                {onPrevious && hasPrevious && (
+                    <Button
+                        onClick={onPrevious}
+                        variant="ghost"
+                        size="icon"
+                        className="hidden sm:flex absolute left-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70"
+                    >
+                        <ChevronLeft className="h-6 w-6" />
+                    </Button>
+                )}
+                
+                {onNext && hasNext && (
+                    <Button
+                        onClick={onNext}
+                        variant="ghost"
+                        size="icon"
+                        className="hidden sm:flex absolute right-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70"
+                    >
+                        <ChevronRight className="h-6 w-6" />
+                    </Button>
+                )}
 
-                    {/* Right: Details - fixed height */}
-                    <div className="flex-1 p-5 flex flex-col">
-                        {/* Header - desktop only */}
-                        <div className="mb-4 hidden sm:block">
-                            <h2 className="text-xl font-bold">
-                                {displayCharacter?.name ?? 'Loading...'}
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                                {displayCharacter?.species}
-                                {displayCharacter?.type && ` • ${displayCharacter.type}`}
-                            </p>
-                        </div>
+                {/* Main Modal */}
+                <div className="relative w-full max-w-4xl h-[90vh] sm:h-[600px] bg-background rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95">
+                    {/* Close Button */}
+                    <Button
+                        onClick={onClose}
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-3 right-3 z-20 h-10 w-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70"
+                    >
+                        <X className="h-5 w-5" />
+                    </Button>
 
-                        {/* Info Grid */}
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <DetailItem
-                                icon={<User2 className="h-3.5 w-3.5" />}
-                                label="Gender"
-                                value={displayCharacter?.gender}
-                            />
-                            <DetailItem
-                                icon={<Globe className="h-3.5 w-3.5" />}
-                                label="Origin"
-                                value={displayCharacter?.origin?.name}
-                            />
-                            <DetailItem
-                                icon={<MapPin className="h-3.5 w-3.5" />}
-                                label="Location"
-                                value={displayCharacter?.location?.name}
-                                className="col-span-2"
-                            />
-                        </div>
-
-                        {/* Episodes - fixed height section */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Tv className="h-3.5 w-3.5 text-muted-foreground" />
-                                <h3 className="text-sm font-semibold">
-                                    Episodes{' '}
-                                    <span className="font-normal text-muted-foreground">
-                                        ({loading ? '—' : episodes.length})
-                                    </span>
-                                </h3>
+                    <div className="flex flex-col sm:flex-row h-full">
+                        {/* Image Section */}
+                        <div className="relative w-full sm:w-[45%] h-64 sm:h-full bg-black flex-shrink-0">
+                            {imageLoading && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
+                                    <Skeleton className="w-full h-full rounded-none" />
+                                </div>
+                            )}
+                            {displayCharacter?.image ? (
+                                <Image
+                                    src={displayCharacter.image}
+                                    alt={displayCharacter.name ?? 'Character'}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 640px) 100vw, 450px"
+                                    quality={100}
+                                    priority
+                                    onLoad={() => setLoadedImageId(character?.id ?? null)}
+                                    onError={() => setLoadedImageId(character?.id ?? null)}
+                                />
+                            ) : (
+                                !imageLoading && <Skeleton className="w-full h-full rounded-none" />
+                            )}
+                            
+                            {/* Status Badge */}
+                            <div className="absolute top-4 left-4">
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-black/60 backdrop-blur-md border border-white/20 text-white">
+                                    <span className={`h-2.5 w-2.5 rounded-full ${status.bg} animate-pulse`} />
+                                    {displayCharacter?.status ?? 'Unknown'}
+                                </span>
                             </div>
 
-                            <div className="space-y-1.5">
-                                {episodeSlots.map((ep, i) => (
-                                    <div
-                                        key={ep?.id ?? `slot-${i}`}
-                                        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/50 h-7"
+                            {/* Mobile Navigation */}
+                            <div className="sm:hidden absolute bottom-4 left-4 right-4 flex justify-between">
+                                {onPrevious && hasPrevious && (
+                                    <Button
+                                        onClick={onPrevious}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white"
                                     >
-                                        {loading ? (
-                                            <Skeleton className="h-4 w-full" />
-                                        ) : ep ? (
-                                            <>
-                                                <span className="font-medium text-primary text-xs">
-                                                    {ep.episode}
-                                                </span>
-                                                <span className="text-muted-foreground truncate text-xs">
-                                                    {ep.name}
-                                                </span>
-                                            </>
-                                        ) : null}
+                                        <ChevronLeft className="h-5 w-5" />
+                                    </Button>
+                                )}
+                                {onNext && hasNext && (
+                                    <Button
+                                        onClick={onNext}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white ml-auto"
+                                    >
+                                        <ChevronRight className="h-5 w-5" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Content Section */}
+                        <div className="flex-1 p-6 sm:p-8 overflow-y-auto">
+                            <div className="space-y-6">
+                                {/* Header */}
+                                <div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold">
+                                        {displayCharacter?.name ?? 'Loading...'}
+                                    </h2>
+                                    <p className="text-muted-foreground mt-1">
+                                        {displayCharacter?.species}
+                                        {displayCharacter?.type && ` • ${displayCharacter.type}`}
+                                    </p>
+                                </div>
+
+                                {/* Details */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <DetailItem
+                                        icon={<User2 className="h-4 w-4" />}
+                                        label="Gender"
+                                        value={displayCharacter?.gender}
+                                    />
+                                    <DetailItem
+                                        icon={<Globe className="h-4 w-4" />}
+                                        label="Origin"
+                                        value={displayCharacter?.origin?.name}
+                                    />
+                                    <DetailItem
+                                        icon={<MapPin className="h-4 w-4" />}
+                                        label="Location"
+                                        value={displayCharacter?.location?.name}
+                                        className="col-span-2"
+                                    />
+                                </div>
+
+                                {/* Episodes */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Tv className="h-4 w-4 text-muted-foreground" />
+                                        <h3 className="font-semibold">
+                                            Episodes
+                                            <span className="font-normal text-muted-foreground ml-2">
+                                                ({loading ? '—' : episodes.length})
+                                            </span>
+                                        </h3>
                                     </div>
-                                ))}
-                                <p className="text-xs text-muted-foreground h-5 flex items-center">
-                                    {!loading && remainingCount > 0
-                                        ? `+${remainingCount} more episodes`
-                                        : '\u00A0'}
-                                </p>
+                                    
+                                    <div className="grid gap-2 max-h-48 overflow-y-auto">
+                                        {loading ? (
+                                            Array.from({ length: 4 }).map((_, i) => (
+                                                <Skeleton key={i} className="h-10" />
+                                            ))
+                                        ) : (
+                                            episodes.slice(0, 10).map((ep) => ep && (
+                                                <div
+                                                    key={ep.id}
+                                                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50 border border-border/50"
+                                                >
+                                                    <span className="font-semibold text-primary text-sm">
+                                                        {ep.episode}
+                                                    </span>
+                                                    <span className="text-sm text-muted-foreground truncate">
+                                                        {ep.name}
+                                                    </span>
+                                                </div>
+                                            ))
+                                        )}
+                                        {!loading && episodes.length > 10 && (
+                                            <p className="text-sm text-muted-foreground mt-2">
+                                                +{episodes.length - 10} more episodes
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </>
     )
 }
 

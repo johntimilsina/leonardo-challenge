@@ -26,7 +26,7 @@ export function CharacterCard({ character, onClick }: CharacterCardProps) {
 
     return (
         <article
-            className="group cursor-pointer rounded-2xl bg-card border border-border/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="group cursor-pointer rounded-lg bg-card border border-border/50 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 hover:border-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={onClick}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -52,14 +52,14 @@ export function CharacterCard({ character, onClick }: CharacterCardProps) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 
                 <div className="absolute top-3 left-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 backdrop-blur-sm shadow-sm`}>
-                        <span className={`h-2 w-2 rounded-full ${status.bg}`} />
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-black/40 backdrop-blur-md shadow-lg border border-white/20 text-white`}>
+                        <span className={`h-2 w-2 rounded-full ${status.bg} animate-pulse`} />
                         {character.status}
                     </span>
                 </div>
 
                 <div className="absolute bottom-3 left-3 right-3">
-                    <span className="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-white/20 backdrop-blur-sm text-white">
+                    <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-black/30 backdrop-blur-md text-white border border-white/10">
                         {character.species}
                     </span>
                 </div>

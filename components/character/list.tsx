@@ -50,8 +50,7 @@ function CharacterListSkeleton() {
  */
 export function CharacterList({ page }: CharacterListProps) {
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
-    const [selectedCharacter, setSelectedCharacter] =
-        useState<Character | null>(null)
+    const [selectedCharacterIndex, setSelectedCharacterIndex] = useState<number | null>(null)
 
     const { data, loading, error } = useQuery<GetCharactersQuery>(
         GET_CHARACTERS,
@@ -61,13 +60,32 @@ export function CharacterList({ page }: CharacterListProps) {
         }
     )
 
+    const characters = data?.characters?.results?.filter(
+        (c): c is Character => c !== null
+    ) || []
+
+    const selectedCharacter = selectedCharacterIndex !== null ? characters[selectedCharacterIndex] : null
+
     const handleSelectCharacter = useCallback((character: Character) => {
-        setSelectedCharacter(character)
-    }, [])
+        const index = characters.findIndex(c => c.id === character.id)
+        setSelectedCharacterIndex(index)
+    }, [characters])
 
     const handleCloseModal = useCallback(() => {
-        setSelectedCharacter(null)
+        setSelectedCharacterIndex(null)
     }, [])
+
+    const handlePreviousCharacter = useCallback(() => {
+        if (selectedCharacterIndex !== null && selectedCharacterIndex > 0) {
+            setSelectedCharacterIndex(selectedCharacterIndex - 1)
+        }
+    }, [selectedCharacterIndex])
+
+    const handleNextCharacter = useCallback(() => {
+        if (selectedCharacterIndex !== null && selectedCharacterIndex < characters.length - 1) {
+            setSelectedCharacterIndex(selectedCharacterIndex + 1)
+        }
+    }, [selectedCharacterIndex, characters.length])
 
     if (isUserLoading || loading) {
         return <CharacterListSkeleton />
@@ -101,9 +119,6 @@ export function CharacterList({ page }: CharacterListProps) {
         )
     }
 
-    const characters = data.characters.results.filter(
-        (c): c is Character => c !== null
-    )
     const info = data.characters.info
 
     return (
@@ -135,6 +150,10 @@ export function CharacterList({ page }: CharacterListProps) {
             <CharacterModal
                 character={selectedCharacter}
                 onClose={handleCloseModal}
+                onPrevious={handlePreviousCharacter}
+                onNext={handleNextCharacter}
+                hasPrevious={selectedCharacterIndex !== null && selectedCharacterIndex > 0}
+                hasNext={selectedCharacterIndex !== null && selectedCharacterIndex < characters.length - 1}
             />
         </>
     )
