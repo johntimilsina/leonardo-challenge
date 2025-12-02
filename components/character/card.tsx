@@ -2,11 +2,23 @@
 
 import Image from 'next/image'
 import { MapPin } from 'lucide-react'
-import type { Character } from '@/lib/graphql'
+
+/** Base character type for card display (without episodes) */
+export interface BaseCharacter {
+    id: string
+    name: string
+    status: string
+    species: string
+    type: string
+    gender: string
+    origin: { name: string }
+    location: { name: string }
+    image: string
+}
 
 interface CharacterCardProps {
     /** Character data to display */
-    character: Character
+    character: BaseCharacter
     /** Callback when card is clicked */
     onClick: () => void
 }

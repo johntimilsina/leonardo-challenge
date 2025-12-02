@@ -5,13 +5,14 @@ import Image from 'next/image'
 import { MapPin, Globe, User2, Tv, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useQuery } from '@apollo/client/react'
 import { GET_CHARACTER } from '@/lib/graphql'
-import type { Character, GetCharacterQuery } from '@/lib/graphql'
+import type { GetCharacterQuery } from '@/lib/graphql'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import type { BaseCharacter } from './card'
 
 interface CharacterModalProps {
-    /** Character to display, null to close modal */
-    character: Character | null
+    /** Character to display (base info), null to close modal */
+    character: BaseCharacter | null
     /** Callback when modal is closed */
     onClose: () => void
     /** Callback to navigate to previous character */

@@ -1,15 +1,23 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { useQuery } from '@apollo/client/react'
+import { useState, useCallback, useEffect, useTransition, useMemo } from 'react'
 import { useUser } from '@/lib/contexts'
-import { GET_CHARACTERS } from '@/lib/graphql'
-import type { GetCharactersQuery, Character } from '@/lib/graphql'
-import { CharacterCard } from './card'
+import { fetchCharacters } from '@/app/actions/characters'
+import { CharacterCard, type BaseCharacter } from './card'
 import { CharacterModal } from './modal'
 import { FilterBar, type CharacterFilters } from './filter-bar'
 import { Pagination } from '@/components/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
+
+interface CharactersResponse {
+    info: {
+        count: number
+        pages: number
+        next: number | null
+        prev: number | null
+    }
+    results: BaseCharacter[]
+}
 
 interface CharacterListProps {
     /** Current page number for pagination */
@@ -47,27 +55,35 @@ function CharacterListSkeleton() {
 
 /**
  * Displays a paginated grid of character cards with modal detail view.
- * Only fetches data when user is authenticated.
+ * Uses Next.js Server Actions for data fetching.
  */
 export function CharacterList({ page }: CharacterListProps) {
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
     const [selectedCharacterIndex, setSelectedCharacterIndex] = useState<number | null>(null)
     const [filters, setFilters] = useState<CharacterFilters>({})
+    const [data, setData] = useState<CharactersResponse | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [isPending, startTransition] = useTransition()
 
-    // Build filter object for GraphQL query
-    const queryFilter = Object.keys(filters).length > 0 ? filters : undefined
+    // Fetch characters using Server Action
+    useEffect(() => {
+        if (!isAuthenticated || isUserLoading) return
 
-    const { data, loading, error } = useQuery<GetCharactersQuery>(
-        GET_CHARACTERS,
-        {
-            variables: { page, filter: queryFilter },
-            skip: !isAuthenticated || isUserLoading,
-        }
-    )
+        startTransition(async () => {
+            const result = await fetchCharacters(page, filters)
+            if (result.error) {
+                setError(result.error)
+                setData(null)
+            } else {
+                setData(result.data as CharactersResponse | null)
+                setError(null)
+            }
+        })
+    }, [page, filters, isAuthenticated, isUserLoading])
 
-    const characters = data?.characters?.results?.filter(
-        (c): c is Character => c !== null
-    ) || []
+    const characters = useMemo(() => 
+        data?.results?.filter((c): c is BaseCharacter => c !== null) || []
+    , [data])
 
     const handleFilterChange = useCallback((newFilters: CharacterFilters) => {
         setFilters(newFilters)
@@ -75,7 +91,7 @@ export function CharacterList({ page }: CharacterListProps) {
 
     const selectedCharacter = selectedCharacterIndex !== null ? characters[selectedCharacterIndex] : null
 
-    const handleSelectCharacter = useCallback((character: Character) => {
+    const handleSelectCharacter = useCallback((character: BaseCharacter) => {
         const index = characters.findIndex(c => c.id === character.id)
         setSelectedCharacterIndex(index)
     }, [characters])
@@ -104,10 +120,10 @@ export function CharacterList({ page }: CharacterListProps) {
         return null
     }
 
-    const isLoading = loading
-    const info = data?.characters?.info
+    const isLoading = isPending
+    const info = data?.info
     const hasActiveFilters = Object.keys(filters).some(key => filters[key as keyof CharacterFilters])
-    const hasResults = data?.characters?.results && data.characters.results.length > 0
+    const hasResults = data?.results && data.results.length > 0
 
     return (
         <>
@@ -119,7 +135,7 @@ export function CharacterList({ page }: CharacterListProps) {
                         Failed to load characters
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        {error.message}
+                        {error}
                     </p>
                 </div>
             ) : isLoading ? (
