@@ -44,27 +44,33 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
     const displayEpisodes = episodes.slice(0, 6)
     const remainingCount = episodes.length - displayEpisodes.length
 
+    // Always show exactly 6 episode slots to prevent layout shift
+    const EPISODE_SLOTS = 6
+    const episodeSlots = Array.from({ length: EPISODE_SLOTS }, (_, i) => displayEpisodes[i] || null)
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-2xl !p-0 !gap-0 overflow-hidden border-0">
                 <DialogTitle className="sr-only">
                     {displayCharacter?.name ?? 'Character Details'}
                 </DialogTitle>
-                <div className="flex flex-col sm:flex-row">
+                <div className="flex flex-col sm:flex-row sm:h-[420px]">
                     {/* Left: Image */}
-                    <div className="relative w-full sm:w-72 flex-shrink-0 aspect-square sm:aspect-auto sm:min-h-[400px]">
+                    <div className="relative w-full sm:w-72 flex-shrink-0 h-52 sm:h-full bg-muted overflow-hidden rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none">
                         {displayCharacter?.image ? (
                             <Image
                                 src={displayCharacter.image}
                                 alt={displayCharacter.name ?? 'Character'}
                                 fill
                                 className="object-cover"
+                                sizes="(max-width: 640px) 100vw, 288px"
+                                quality={100}
                                 priority
                             />
                         ) : (
                             <Skeleton className="w-full h-full" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                         <div className="absolute top-3 left-3">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 backdrop-blur-sm shadow-sm">
                                 <span className={`h-2 w-2 rounded-full ${status.bg}`} />
@@ -82,8 +88,8 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
                         </div>
                     </div>
 
-                    {/* Right: Details */}
-                    <div className="flex-1 p-5 overflow-y-auto max-h-[50vh] sm:overflow-visible sm:max-h-none">
+                    {/* Right: Details - fixed height */}
+                    <div className="flex-1 p-5 flex flex-col">
                         {/* Header - desktop only */}
                         <div className="mb-4 hidden sm:block">
                             <h2 className="text-xl font-bold">
@@ -115,45 +121,43 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
                             />
                         </div>
 
-                        {/* Episodes */}
-                        <div>
+                        {/* Episodes - fixed height section */}
+                        <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                                 <Tv className="h-3.5 w-3.5 text-muted-foreground" />
                                 <h3 className="text-sm font-semibold">
                                     Episodes{' '}
                                     <span className="font-normal text-muted-foreground">
-                                        ({loading ? '...' : episodes.length})
+                                        ({loading ? '—' : episodes.length})
                                     </span>
                                 </h3>
                             </div>
 
                             <div className="space-y-1.5">
-                                {loading ? (
-                                    Array.from({ length: 6 }).map((_, i) => (
-                                        <Skeleton key={i} className="h-7" />
-                                    ))
-                                ) : (
-                                    <>
-                                        {displayEpisodes.map((ep) => (
-                                            <div
-                                                key={ep?.id}
-                                                className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/50 text-sm"
-                                            >
+                                {episodeSlots.map((ep, i) => (
+                                    <div
+                                        key={ep?.id ?? `slot-${i}`}
+                                        className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-muted/50 h-7"
+                                    >
+                                        {loading ? (
+                                            <Skeleton className="h-4 w-full" />
+                                        ) : ep ? (
+                                            <>
                                                 <span className="font-medium text-primary text-xs">
-                                                    {ep?.episode}
+                                                    {ep.episode}
                                                 </span>
                                                 <span className="text-muted-foreground truncate text-xs">
-                                                    {ep?.name}
+                                                    {ep.name}
                                                 </span>
-                                            </div>
-                                        ))}
-                                        {remainingCount > 0 && (
-                                            <p className="text-xs text-muted-foreground pt-1">
-                                                +{remainingCount} more episodes
-                                            </p>
-                                        )}
-                                    </>
-                                )}
+                                            </>
+                                        ) : null}
+                                    </div>
+                                ))}
+                                <p className="text-xs text-muted-foreground h-5 flex items-center">
+                                    {!loading && remainingCount > 0
+                                        ? `+${remainingCount} more episodes`
+                                        : '\u00A0'}
+                                </p>
                             </div>
                         </div>
                     </div>
