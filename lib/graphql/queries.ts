@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client'
 
 /**
  * GraphQL Queries for Rick and Morty API.
@@ -12,32 +12,32 @@ import { gql } from "@apollo/client";
  * @param page - Page number (1-indexed)
  */
 export const GET_CHARACTERS = gql`
-  query GetCharacters($page: Int!) {
-    characters(page: $page) {
-      info {
-        count
-        pages
-        next
-        prev
-      }
-      results {
-        id
-        name
-        status
-        species
-        type
-        gender
-        origin {
-          name
+    query GetCharacters($page: Int!) {
+        characters(page: $page) {
+            info {
+                count
+                pages
+                next
+                prev
+            }
+            results {
+                id
+                name
+                status
+                species
+                type
+                gender
+                origin {
+                    name
+                }
+                location {
+                    name
+                }
+                image
+            }
         }
-        location {
-          name
-        }
-        image
-      }
     }
-  }
-`;
+`
 
 /**
  * Fetches a single character by ID.
@@ -45,26 +45,26 @@ export const GET_CHARACTERS = gql`
  * @param id - Character ID
  */
 export const GET_CHARACTER = gql`
-  query GetCharacter($id: ID!) {
-    character(id: $id) {
-      id
-      name
-      status
-      species
-      type
-      gender
-      origin {
-        name
-      }
-      location {
-        name
-      }
-      image
-      episode {
-        id
-        name
-      }
-      created
+    query GetCharacter($id: ID!) {
+        character(id: $id) {
+            id
+            name
+            status
+            species
+            type
+            gender
+            origin {
+                name
+            }
+            location {
+                name
+            }
+            image
+            episode {
+                id
+                name
+            }
+            created
+        }
     }
-  }
-`;
+`

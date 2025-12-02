@@ -1,4 +1,4 @@
 /**
  * Type definitions barrel export.
  */
-export * from "./user";
+export * from './user'

@@ -4,18 +4,18 @@
  * Run `pnpm codegen` to regenerate after schema changes.
  */
 export type {
-  Character,
-  Episode,
-  Location,
-  Info,
-  Characters,
-  GetCharactersQuery,
-  GetCharactersQueryVariables,
-  GetCharacterQuery,
-  GetCharacterQueryVariables,
-} from "./__generated__/graphql";
+    Character,
+    Episode,
+    Location,
+    Info,
+    Characters,
+    GetCharactersQuery,
+    GetCharactersQueryVariables,
+    GetCharacterQuery,
+    GetCharacterQueryVariables,
+} from './__generated__/graphql'
 
 export {
-  GetCharactersDocument,
-  GetCharacterDocument,
-} from "./__generated__/graphql";
+    GetCharactersDocument,
+    GetCharacterDocument,
+} from './__generated__/graphql'

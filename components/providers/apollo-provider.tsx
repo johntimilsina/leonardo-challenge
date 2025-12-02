@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { ApolloProvider as BaseApolloProvider } from "@apollo/client/react";
-import { getApolloClient } from "@/lib/apollo-client";
+import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react'
+import { getApolloClient } from '@/lib/apollo-client'
 
 interface ApolloProviderProps {
-  children: React.ReactNode;
+    children: React.ReactNode
 }
 
 /**
@@ -12,7 +12,7 @@ interface ApolloProviderProps {
  * Provides Apollo Client context to all child components.
  */
 export function ApolloProvider({ children }: ApolloProviderProps) {
-  const client = getApolloClient();
+    const client = getApolloClient()
 
-  return <BaseApolloProvider client={client}>{children}</BaseApolloProvider>;
+    return <BaseApolloProvider client={client}>{children}</BaseApolloProvider>
 }
