@@ -1,0 +1,68 @@
+import { gql } from "@apollo/client";
+
+/**
+ * GraphQL Queries for Rick and Morty API.
+ * @see https://rickandmortyapi.com/documentation/#graphql
+ */
+
+/**
+ * Fetches a paginated list of characters.
+ * @param page - Page number (1-indexed)
+ */
+export const GET_CHARACTERS = gql`
+  query GetCharacters($page: Int!) {
+    characters(page: $page) {
+      info {
+        count
+        pages
+        next
+        prev
+      }
+      results {
+        id
+        name
+        status
+        species
+        type
+        gender
+        origin {
+          name
+        }
+        location {
+          name
+        }
+        image
+      }
+    }
+  }
+`;
+
+/**
+ * Fetches a single character by ID.
+ * Includes episode information for detailed view.
+ * @param id - Character ID
+ */
+export const GET_CHARACTER = gql`
+  query GetCharacter($id: ID!) {
+    character(id: $id) {
+      id
+      name
+      status
+      species
+      type
+      gender
+      origin {
+        name
+      }
+      location {
+        name
+      }
+      image
+      episode {
+        id
+        name
+      }
+      created
+    }
+  }
+`;
