@@ -205,6 +205,7 @@ export type QueryLocationsByIdsArgs = {
 
 export type GetCharactersQueryVariables = Exact<{
   page: Scalars['Int']['input'];
+  filter?: InputMaybe<FilterCharacter>;
 }>;
 
 
@@ -237,8 +238,8 @@ export class TypedDocumentString<TResult, TVariables>
 }
 
 export const GetCharactersDocument = new TypedDocumentString(`
-    query GetCharacters($page: Int!) {
-  characters(page: $page) {
+    query GetCharacters($page: Int!, $filter: FilterCharacter) {
+  characters(page: $page, filter: $filter) {
     info {
       count
       pages

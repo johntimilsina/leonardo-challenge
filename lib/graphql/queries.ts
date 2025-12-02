@@ -8,12 +8,13 @@ import { gql } from '@apollo/client'
  */
 
 /**
- * Fetches a paginated list of characters.
+ * Fetches a paginated list of characters with optional filters.
  * @param page - Page number (1-indexed)
+ * @param filter - Optional filter object with name, status, species, gender
  */
 export const GET_CHARACTERS = gql`
-    query GetCharacters($page: Int!) {
-        characters(page: $page) {
+    query GetCharacters($page: Int!, $filter: FilterCharacter) {
+        characters(page: $page, filter: $filter) {
             info {
                 count
                 pages

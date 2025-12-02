@@ -7,6 +7,7 @@ import { GET_CHARACTERS } from '@/lib/graphql'
 import type { GetCharactersQuery, Character } from '@/lib/graphql'
 import { CharacterCard } from './card'
 import { CharacterModal } from './modal'
+import { FilterBar, type CharacterFilters } from './filter-bar'
 import { Pagination } from '@/components/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -51,11 +52,15 @@ function CharacterListSkeleton() {
 export function CharacterList({ page }: CharacterListProps) {
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
     const [selectedCharacterIndex, setSelectedCharacterIndex] = useState<number | null>(null)
+    const [filters, setFilters] = useState<CharacterFilters>({})
+
+    // Build filter object for GraphQL query
+    const queryFilter = Object.keys(filters).length > 0 ? filters : undefined
 
     const { data, loading, error } = useQuery<GetCharactersQuery>(
         GET_CHARACTERS,
         {
-            variables: { page },
+            variables: { page, filter: queryFilter },
             skip: !isAuthenticated || isUserLoading,
         }
     )
@@ -63,6 +68,10 @@ export function CharacterList({ page }: CharacterListProps) {
     const characters = data?.characters?.results?.filter(
         (c): c is Character => c !== null
     ) || []
+
+    const handleFilterChange = useCallback((newFilters: CharacterFilters) => {
+        setFilters(newFilters)
+    }, [])
 
     const selectedCharacter = selectedCharacterIndex !== null ? characters[selectedCharacterIndex] : null
 
@@ -87,7 +96,7 @@ export function CharacterList({ page }: CharacterListProps) {
         }
     }, [selectedCharacterIndex, characters.length])
 
-    if (isUserLoading || loading) {
+    if (isUserLoading) {
         return <CharacterListSkeleton />
     }
 
@@ -95,56 +104,67 @@ export function CharacterList({ page }: CharacterListProps) {
         return null
     }
 
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-lg font-medium text-destructive">
-                    Failed to load characters
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    {error.message}
-                </p>
-            </div>
-        )
-    }
-
-    if (!data?.characters?.results) {
-        return (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-lg font-medium">No characters found</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Try adjusting your search or go to page 1.
-                </p>
-            </div>
-        )
-    }
-
-    const info = data.characters.info
+    const isLoading = loading
+    const info = data?.characters?.info
+    const hasActiveFilters = Object.keys(filters).some(key => filters[key as keyof CharacterFilters])
+    const hasResults = data?.characters?.results && data.characters.results.length > 0
 
     return (
         <>
-            <p className="mb-6 text-sm text-muted-foreground">
-                Showing {characters.length} of {info?.count ?? 0} characters
-            </p>
+            <FilterBar filters={filters} onFilterChange={handleFilterChange} disabled={isLoading} />
 
-            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {characters.map((character) => (
-                    <CharacterCard
-                        key={character.id}
-                        character={character}
-                        onClick={() => handleSelectCharacter(character)}
-                    />
-                ))}
-            </div>
-
-            {info && (
-                <div className="mt-6 sm:mt-8">
-                    <Pagination
-                        info={info}
-                        currentPage={page}
-                        basePath="/information"
-                    />
+            {error ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-lg font-medium text-destructive">
+                        Failed to load characters
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        {error.message}
+                    </p>
                 </div>
+            ) : isLoading ? (
+                <>
+                    <p className="mb-4 text-sm text-muted-foreground">Loading characters...</p>
+                    <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <CharacterCardSkeleton key={i} />
+                        ))}
+                    </div>
+                </>
+            ) : !hasResults ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-lg font-medium">No characters found</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        {hasActiveFilters ? 'Try adjusting your filters.' : 'Try a different page.'}
+                    </p>
+                </div>
+            ) : (
+                <>
+                    <p className="mb-4 text-sm text-muted-foreground">
+                        {hasActiveFilters ? 'Found' : 'Showing'} {info?.count ?? 0} characters
+                        {hasActiveFilters && ' matching filters'}
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {characters.map((character) => (
+                            <CharacterCard
+                                key={character.id}
+                                character={character}
+                                onClick={() => handleSelectCharacter(character)}
+                            />
+                        ))}
+                    </div>
+
+                    {info && (
+                        <div className="mt-6 sm:mt-8">
+                            <Pagination
+                                info={info}
+                                currentPage={page}
+                                basePath="/information"
+                            />
+                        </div>
+                    )}
+                </>
             )}
 
             <CharacterModal
