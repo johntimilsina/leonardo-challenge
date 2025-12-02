@@ -13,21 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-/**
- * Blocking modal that collects user information before allowing access.
- * Displays when user is not authenticated and cannot be dismissed without submission.
- */
 export function OnboardingModal() {
   const { user, isLoading, isAuthenticated, saveUser } = useUser();
 
-  // Form state - pre-fill with existing user data for editing
   const [username, setUsername] = useState(user?.username ?? "");
   const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? "");
   const [errors, setErrors] = useState<{ username?: string; jobTitle?: string }>(
     {}
   );
 
-  // Update form when user data loads
   useState(() => {
     if (user) {
       setUsername(user.username);
@@ -71,7 +65,6 @@ export function OnboardingModal() {
     [username, jobTitle, validateForm, saveUser]
   );
 
-  // Don't render anything while loading or if authenticated
   if (isLoading || isAuthenticated) {
     return null;
   }
@@ -82,7 +75,6 @@ export function OnboardingModal() {
         className="sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        // Hide close button since modal is blocking
         showCloseButton={false}
       >
         <DialogHeader>
