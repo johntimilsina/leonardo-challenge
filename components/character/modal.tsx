@@ -9,10 +9,16 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface CharacterModalProps {
+    /** Character to display, null to close modal */
     character: Character | null
+    /** Callback when modal is closed */
     onClose: () => void
 }
 
+/**
+ * Modal dialog displaying detailed character information including episodes.
+ * Fetches additional character data (episodes) when opened.
+ */
 export function CharacterModal({ character, onClose }: CharacterModalProps) {
     const { data, loading } = useQuery<GetCharacterQuery>(GET_CHARACTER, {
         variables: { id: character?.id },

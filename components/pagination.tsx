@@ -6,15 +6,23 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Info } from '@/lib/graphql'
 
 interface PaginationProps {
+    /** Pagination info from GraphQL API */
     info: Info
+    /** Current active page number */
     currentPage: number
+    /** Base path for pagination URLs (e.g., '/information') */
     basePath: string
 }
 
+/** Generates pagination URL for a given page number */
 function getPageUrl(basePath: string, page: number): string {
     return `${basePath}/${page}`
 }
 
+/**
+ * Pagination component with page numbers and prev/next navigation.
+ * Supports direct URL linking to specific pages.
+ */
 export function Pagination({ info, currentPage, basePath }: PaginationProps) {
     const totalPages = info.pages ?? 1
     const hasPrev = currentPage > 1

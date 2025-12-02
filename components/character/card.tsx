@@ -5,10 +5,16 @@ import { MapPin } from 'lucide-react'
 import type { Character } from '@/lib/graphql'
 
 interface CharacterCardProps {
+    /** Character data to display */
     character: Character
+    /** Callback when card is clicked */
     onClick: () => void
 }
 
+/**
+ * Displays a character in a card format with image, status badge, and location.
+ * Includes keyboard navigation support for accessibility.
+ */
 export function CharacterCard({ character, onClick }: CharacterCardProps) {
     const statusConfig = {
         Alive: { bg: 'bg-emerald-500', text: 'text-emerald-500' },

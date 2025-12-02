@@ -11,6 +11,7 @@ import { Pagination } from '@/components/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface CharacterListProps {
+    /** Current page number for pagination */
     page: number
 }
 
@@ -43,6 +44,10 @@ function CharacterListSkeleton() {
     )
 }
 
+/**
+ * Displays a paginated grid of character cards with modal detail view.
+ * Only fetches data when user is authenticated.
+ */
 export function CharacterList({ page }: CharacterListProps) {
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
     const [selectedCharacter, setSelectedCharacter] =
