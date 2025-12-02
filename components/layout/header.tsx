@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { UserInfo } from './user-info'
+import { UserInfo } from '@/components/user-info'
 
 export function Header() {
     return (

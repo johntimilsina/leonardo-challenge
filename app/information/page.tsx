@@ -1,80 +1,62 @@
 'use client'
 
-import { Suspense, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Header, Footer, CharacterGrid, CharacterModal } from '@/components'
-import type { Character } from '@/lib/graphql'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Suspense, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { useUser } from '@/lib/contexts'
+import { Header, Footer } from '@/components/layout'
+import { CharacterList } from '@/components/character'
 
-export default function InformationPage() {
+function CharacterListFallback() {
     return (
-        <Suspense fallback={<PageSkeleton />}>
-            <PageContent />
-        </Suspense>
+        <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="mt-4 text-muted-foreground">Loading characters...</p>
+        </div>
     )
 }
 
-function PageContent() {
-    const searchParams = useSearchParams()
-    const [selectedCharacter, setSelectedCharacter] =
-        useState<Character | null>(null)
+export default function InformationPage() {
+    const router = useRouter()
+    const { isLoading, isAuthenticated } = useUser()
 
-    const pageParam = searchParams.get('page')
-    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace('/welcome')
+        }
+    }, [isLoading, isAuthenticated, router])
 
-    const handleSelectCharacter = useCallback((character: Character) => {
-        setSelectedCharacter(character)
-    }, [])
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+        )
+    }
 
-    const handleCloseModal = useCallback(() => {
-        setSelectedCharacter(null)
-    }, [])
+    if (!isAuthenticated) {
+        return null
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1 container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-8">Characters</h1>
-                <CharacterGrid
-                    page={page}
-                    onSelectCharacter={handleSelectCharacter}
-                />
-            </main>
-            <CharacterModal
-                character={selectedCharacter}
-                onClose={handleCloseModal}
-            />
-            <Footer />
-        </div>
-    )
-}
-
-function PageSkeleton() {
-    return (
-        <div className="min-h-screen flex flex-col">
-            <div className="h-14 border-b" />
-            <main className="flex-1 container mx-auto px-4 py-8">
-                <Skeleton className="h-9 w-48 mb-8" />
-                <div className="space-y-8">
-                    <Skeleton className="h-5 w-48" />
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {Array.from({ length: 8 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className="overflow-hidden rounded-lg border"
-                            >
-                                <Skeleton className="aspect-square w-full" />
-                                <div className="p-4 space-y-2">
-                                    <Skeleton className="h-6 w-3/4" />
-                                    <Skeleton className="h-4 w-1/2" />
-                                    <Skeleton className="h-4 w-2/3" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                        Character Explorer
+                    </h1>
+                    <p className="mt-2 text-muted-foreground">
+                        Discover characters from across the Rick and Morty
+                        multiverse
+                    </p>
                 </div>
+
+                <Suspense fallback={<CharacterListFallback />}>
+                    <CharacterList />
+                </Suspense>
             </main>
-            <div className="h-14 border-t" />
+            <Footer />
         </div>
     )
 }

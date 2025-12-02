@@ -1,20 +1,24 @@
 'use client'
 
+import { useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
+import { Loader2 } from 'lucide-react'
 import { useUser } from '@/lib/contexts'
 import { GET_CHARACTERS } from '@/lib/graphql'
 import type { GetCharactersQuery, Character } from '@/lib/graphql'
-import { CharacterCard } from './character-card'
-import { Pagination } from './pagination'
-import { Skeleton } from '@/components/ui/skeleton'
+import { CharacterCard } from './card'
+import { CharacterModal } from './modal'
+import { Pagination } from '@/components/pagination'
 
-interface CharacterGridProps {
-    page: number
-    onSelectCharacter: (character: Character) => void
-}
-
-export function CharacterGrid({ page, onSelectCharacter }: CharacterGridProps) {
+export function CharacterList() {
+    const searchParams = useSearchParams()
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
+    const [selectedCharacter, setSelectedCharacter] =
+        useState<Character | null>(null)
+
+    const pageParam = searchParams.get('page')
+    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
 
     const { data, loading, error } = useQuery<GetCharactersQuery>(
         GET_CHARACTERS,
@@ -24,8 +28,21 @@ export function CharacterGrid({ page, onSelectCharacter }: CharacterGridProps) {
         }
     )
 
+    const handleSelectCharacter = useCallback((character: Character) => {
+        setSelectedCharacter(character)
+    }, [])
+
+    const handleCloseModal = useCallback(() => {
+        setSelectedCharacter(null)
+    }, [])
+
     if (isUserLoading) {
-        return <CharacterGridSkeleton />
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">Loading...</p>
+            </div>
+        )
     }
 
     if (!isAuthenticated) {
@@ -33,7 +50,14 @@ export function CharacterGrid({ page, onSelectCharacter }: CharacterGridProps) {
     }
 
     if (loading) {
-        return <CharacterGridSkeleton />
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="mt-4 text-muted-foreground">
+                    Loading characters...
+                </p>
+            </div>
+        )
     }
 
     if (error) {
@@ -66,8 +90,8 @@ export function CharacterGrid({ page, onSelectCharacter }: CharacterGridProps) {
     const info = data.characters.info
 
     return (
-        <div className="space-y-8">
-            <p className="text-sm text-muted-foreground">
+        <>
+            <p className="mb-6 text-sm text-muted-foreground">
                 Showing {characters.length} of {info?.count ?? 0} characters
             </p>
 
@@ -76,38 +100,25 @@ export function CharacterGrid({ page, onSelectCharacter }: CharacterGridProps) {
                     <CharacterCard
                         key={character.id}
                         character={character}
-                        onClick={() => onSelectCharacter(character)}
+                        onClick={() => handleSelectCharacter(character)}
                     />
                 ))}
             </div>
 
             {info && (
-                <Pagination
-                    info={info}
-                    currentPage={page}
-                    basePath="/information"
-                />
+                <div className="mt-8">
+                    <Pagination
+                        info={info}
+                        currentPage={page}
+                        basePath="/information"
+                    />
+                </div>
             )}
-        </div>
-    )
-}
 
-function CharacterGridSkeleton() {
-    return (
-        <div className="space-y-8">
-            <Skeleton className="h-5 w-48" />
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="overflow-hidden rounded-lg border">
-                        <Skeleton className="aspect-square w-full" />
-                        <div className="p-4 space-y-2">
-                            <Skeleton className="h-6 w-3/4" />
-                            <Skeleton className="h-4 w-1/2" />
-                            <Skeleton className="h-4 w-2/3" />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+            <CharacterModal
+                character={selectedCharacter}
+                onClose={handleCloseModal}
+            />
+        </>
     )
 }
