@@ -6,6 +6,7 @@ import { useUser } from '@/lib/contexts'
 import { Header, Footer } from '@/components/layout'
 import { CharacterList } from '@/components/character'
 import { PageSkeleton } from '@/components/ui/page-skeleton'
+import { ScrollToTop } from '@/components/scroll-to-top'
 
 interface PageProps {
     params: Promise<{ pageNumber: string }>
@@ -41,6 +42,7 @@ export default function InformationPage({ params }: PageProps) {
                 <CharacterList page={page} />
             </main>
             <Footer />
+            <ScrollToTop />
         </div>
     )
 }
