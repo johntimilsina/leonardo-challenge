@@ -1,49 +1,51 @@
 'use client'
 
 import { useState, useCallback, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { LogOut, User } from 'lucide-react'
 import { useUser } from '@/lib/contexts'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
-/**
- * Displays current user information with ability to edit.
- * Shows as a button that opens a dialog for editing.
- */
 export function UserInfo() {
-    const { user, saveUser } = useUser()
-    const [isOpen, setIsOpen] = useState(false)
-    const [username, setUsername] = useState(user?.username ?? '')
-    const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '')
+    const router = useRouter()
+    const { user, saveUser, clearUser } = useUser()
+    const [isEditOpen, setIsEditOpen] = useState(false)
+    const [username, setUsername] = useState('')
+    const [jobTitle, setJobTitle] = useState('')
     const [errors, setErrors] = useState<{
         username?: string
         jobTitle?: string
     }>({})
 
-    // Reset form when dialog opens
-    const handleOpenChange = useCallback(
-        (open: boolean) => {
-            if (open && user) {
-                setUsername(user.username)
-                setJobTitle(user.jobTitle)
-                setErrors({})
-            }
-            setIsOpen(open)
-        },
-        [user]
-    )
+    const handleOpenEdit = useCallback(() => {
+        if (user) {
+            setUsername(user.username)
+            setJobTitle(user.jobTitle)
+            setErrors({})
+        }
+        setIsEditOpen(true)
+    }, [user])
 
     const validateForm = useCallback(() => {
         const newErrors: { username?: string; jobTitle?: string } = {}
-
         const trimmedUsername = username.trim()
         const trimmedJobTitle = jobTitle.trim()
 
@@ -66,104 +68,122 @@ export function UserInfo() {
     const handleSubmit = useCallback(
         (e: FormEvent) => {
             e.preventDefault()
-
             if (!validateForm()) return
 
             saveUser({
                 username: username.trim(),
                 jobTitle: jobTitle.trim(),
             })
-            setIsOpen(false)
+            setIsEditOpen(false)
         },
         [username, jobTitle, validateForm, saveUser]
     )
 
+    const handleLogout = useCallback(() => {
+        clearUser()
+        router.push('/welcome')
+    }, [clearUser, router])
+
     if (!user) return null
 
+    const initials = user.username.charAt(0).toUpperCase()
+
     return (
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <span className="hidden sm:inline">
-                        {user.username} • {user.jobTitle}
-                    </span>
-                    <span className="sm:hidden">{user.username}</span>
-                </Button>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Edit Profile</DialogTitle>
-                    <DialogDescription>
-                        Update your username and job title.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-username">Username</Label>
-                        <Input
-                            id="edit-username"
-                            type="text"
-                            placeholder="Enter your username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            aria-describedby={
-                                errors.username
-                                    ? 'edit-username-error'
-                                    : undefined
-                            }
-                            aria-invalid={!!errors.username}
-                            autoComplete="username"
-                        />
-                        {errors.username && (
-                            <p
-                                id="edit-username-error"
-                                className="text-sm text-destructive"
-                            >
-                                {errors.username}
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        aria-label="User menu"
+                    >
+                        <Avatar className="h-9 w-9 cursor-pointer">
+                            <AvatarFallback className="bg-primary text-primary-foreground font-medium">
+                                {initials}
+                            </AvatarFallback>
+                        </Avatar>
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium">
+                                {user.username}
                             </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-jobTitle">Job Title</Label>
-                        <Input
-                            id="edit-jobTitle"
-                            type="text"
-                            placeholder="Enter your job title"
-                            value={jobTitle}
-                            onChange={(e) => setJobTitle(e.target.value)}
-                            aria-describedby={
-                                errors.jobTitle
-                                    ? 'edit-jobtitle-error'
-                                    : undefined
-                            }
-                            aria-invalid={!!errors.jobTitle}
-                            autoComplete="organization-title"
-                        />
-                        {errors.jobTitle && (
-                            <p
-                                id="edit-jobtitle-error"
-                                className="text-sm text-destructive"
-                            >
-                                {errors.jobTitle}
+                            <p className="text-xs text-muted-foreground">
+                                {user.jobTitle}
                             </p>
-                        )}
-                    </div>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleOpenEdit}>
+                        <User className="mr-2 h-4 w-4" />
+                        Edit Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="text-destructive focus:text-destructive"
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
-                    <div className="flex gap-2 justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="submit">Save Changes</Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                        <DialogDescription>
+                            Update your username and job title.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-username">Username</Label>
+                            <Input
+                                id="edit-username"
+                                type="text"
+                                placeholder="Enter your username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                aria-invalid={!!errors.username}
+                            />
+                            {errors.username && (
+                                <p className="text-sm text-destructive">
+                                    {errors.username}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-jobTitle">Job Title</Label>
+                            <Input
+                                id="edit-jobTitle"
+                                type="text"
+                                placeholder="Enter your job title"
+                                value={jobTitle}
+                                onChange={(e) => setJobTitle(e.target.value)}
+                                aria-invalid={!!errors.jobTitle}
+                            />
+                            {errors.jobTitle && (
+                                <p className="text-sm text-destructive">
+                                    {errors.jobTitle}
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsEditOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit">Save Changes</Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
