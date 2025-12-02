@@ -80,7 +80,7 @@ export function FilterBar({ filters, onFilterChange, disabled = false }: FilterB
     const hasActiveFilters = filters.name || filters.status || filters.species || filters.gender
 
     return (
-        <div className="sticky top-14 z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border/50 mb-4">
+        <div className="sticky top-14 z-30 -mx-4 -mt-6 sm:-mt-8 px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border/50 mb-5">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 {/* Search */}
                 <form onSubmit={handleSearchSubmit} className="flex gap-2 flex-1 min-w-0">
