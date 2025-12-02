@@ -77,7 +77,7 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
                     </div>
 
                     {/* Right: Details */}
-                    <div className="flex-1 p-5 overflow-y-auto max-h-[50vh] sm:max-h-[450px]">
+                    <div className="flex-1 p-5 overflow-y-auto max-h-[50vh] sm:overflow-visible sm:max-h-none">
                         {/* Header - desktop only */}
                         <div className="mb-4 hidden sm:block">
                             <h2 className="text-xl font-bold">
@@ -121,7 +121,7 @@ export function CharacterModal({ character, onClose }: CharacterModalProps) {
                                 </h3>
                             </div>
 
-                            <div className="space-y-1.5 min-h-[140px]">
+                            <div className="space-y-1.5">
                                 {loading ? (
                                     Array.from({ length: 6 }).map((_, i) => (
                                         <Skeleton key={i} className="h-7" />
