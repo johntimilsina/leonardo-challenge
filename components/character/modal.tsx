@@ -71,14 +71,16 @@ export function CharacterModal({
             />
             
             {/* Modal Content */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <div 
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none"
+            >
                 {/* Navigation Arrows - Desktop */}
                 {onPrevious && hasPrevious && (
                     <Button
                         onClick={onPrevious}
                         variant="ghost"
                         size="icon"
-                        className="hidden sm:flex absolute left-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70"
+                        className="hidden sm:flex absolute left-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70 pointer-events-auto"
                     >
                         <ChevronLeft className="h-6 w-6" />
                     </Button>
@@ -89,14 +91,17 @@ export function CharacterModal({
                         onClick={onNext}
                         variant="ghost"
                         size="icon"
-                        className="hidden sm:flex absolute right-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70"
+                        className="hidden sm:flex absolute right-4 z-10 h-12 w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white hover:bg-black/70 pointer-events-auto"
                     >
                         <ChevronRight className="h-6 w-6" />
                     </Button>
                 )}
 
                 {/* Main Modal */}
-                <div className="relative w-full max-w-4xl h-[90vh] sm:h-[600px] bg-background rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95">
+                <div 
+                    className="relative w-full max-w-4xl h-[90vh] sm:h-[600px] bg-background rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 pointer-events-auto"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     {/* Close Button */}
                     <Button
                         onClick={onClose}
@@ -140,13 +145,13 @@ export function CharacterModal({
                             </div>
 
                             {/* Mobile Navigation */}
-                            <div className="sm:hidden absolute bottom-4 left-4 right-4 flex justify-between">
+                            <div className="sm:hidden absolute bottom-4 left-4 right-4 flex justify-between pointer-events-none">
                                 {onPrevious && hasPrevious && (
                                     <Button
                                         onClick={onPrevious}
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white"
+                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white pointer-events-auto"
                                     >
                                         <ChevronLeft className="h-5 w-5" />
                                     </Button>
@@ -156,7 +161,7 @@ export function CharacterModal({
                                         onClick={onNext}
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white ml-auto"
+                                        className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white ml-auto pointer-events-auto"
                                     >
                                         <ChevronRight className="h-5 w-5" />
                                     </Button>
