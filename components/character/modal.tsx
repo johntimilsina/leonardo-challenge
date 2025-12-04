@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { MapPin, Globe, User2, Tv, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useQuery } from '@apollo/client/react'
@@ -60,6 +60,16 @@ export function CharacterModal({
         : statusConfig.unknown
 
     const episodes = fullCharacter?.episode?.filter(Boolean) || []
+
+    
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden'
+            return () => {
+                document.body.style.overflow = ''
+            }
+        }
+    }, [isOpen])
 
     if (!isOpen) return null
 
@@ -216,13 +226,13 @@ export function CharacterModal({
                                         </h3>
                                     </div>
                                     
-                                    <div className="grid gap-2 max-h-48 overflow-y-auto">
+                                    <div className="grid gap-2">
                                         {loading ? (
                                             Array.from({ length: 4 }).map((_, i) => (
                                                 <Skeleton key={i} className="h-10" />
                                             ))
                                         ) : (
-                                            episodes.slice(0, 10).map((ep) => ep && (
+                                            episodes.map((ep) => ep && (
                                                 <div
                                                     key={ep.id}
                                                     className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50 border border-border/50"
@@ -236,12 +246,7 @@ export function CharacterModal({
                                                 </div>
                                             ))
                                         )}
-                                        {!loading && episodes.length > 10 && (
-                                            <p className="text-sm text-muted-foreground mt-2">
-                                                +{episodes.length - 10} more episodes
-                                            </p>
-                                        )}
-                                    </div>
+                                                                            </div>
                                 </div>
                             </div>
                         </div>
