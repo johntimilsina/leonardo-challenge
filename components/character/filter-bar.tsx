@@ -52,6 +52,12 @@ const SPECIES_OPTIONS = [
  */
 export function FilterBar({ filters, onFilterChange, disabled = false }: FilterBarProps) {
     const [searchInput, setSearchInput] = useState(filters.name || '')
+    const [lastFilterName, setLastFilterName] = useState(filters.name)
+
+    if (lastFilterName !== filters.name) {
+        setLastFilterName(filters.name)
+        setSearchInput(filters.name || '')
+    }
 
     const handleSearchSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault()
@@ -67,7 +73,6 @@ export function FilterBar({ filters, onFilterChange, disabled = false }: FilterB
 
     const handleFilterSelect = useCallback((key: keyof CharacterFilters, value: string) => {
         if (!disabled) {
-            // 'all' is used as placeholder value since empty strings aren't allowed
             onFilterChange({ ...filters, [key]: value === 'all' ? undefined : value })
         }
     }, [filters, onFilterChange, disabled])

@@ -12,18 +12,20 @@ interface PaginationProps {
     currentPage: number
     /** Base path for pagination URLs (e.g., '/information') */
     basePath: string
+    /** Optional query string to append to URLs (e.g., '?name=rick') */
+    queryString?: string
 }
 
 /** Generates pagination URL for a given page number */
-function getPageUrl(basePath: string, page: number): string {
-    return `${basePath}/${page}`
+function getPageUrl(basePath: string, page: number, queryString?: string): string {
+    return `${basePath}/${page}${queryString || ''}`
 }
 
 /**
  * Pagination component with page numbers and prev/next navigation.
  * Supports direct URL linking to specific pages.
  */
-export function Pagination({ info, currentPage, basePath }: PaginationProps) {
+export function Pagination({ info, currentPage, basePath, queryString }: PaginationProps) {
     const totalPages = info.pages ?? 1
     const hasPrev = currentPage > 1
     const hasNext = currentPage < totalPages
@@ -76,7 +78,7 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                 aria-label="Go to previous page"
             >
                 {hasPrev ? (
-                    <Link href={getPageUrl(basePath, currentPage - 1)}>
+                    <Link href={getPageUrl(basePath, currentPage - 1, queryString)}>
                         <ChevronLeft className="h-4 w-4" />
                     </Link>
                 ) : (
@@ -108,7 +110,7 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                             {page === currentPage ? (
                                 <span>{page}</span>
                             ) : (
-                                <Link href={getPageUrl(basePath, page)}>
+                                <Link href={getPageUrl(basePath, page, queryString)}>
                                     {page}
                                 </Link>
                             )}
@@ -129,7 +131,7 @@ export function Pagination({ info, currentPage, basePath }: PaginationProps) {
                 aria-label="Go to next page"
             >
                 {hasNext ? (
-                    <Link href={getPageUrl(basePath, currentPage + 1)}>
+                    <Link href={getPageUrl(basePath, currentPage + 1, queryString)}>
                         <ChevronRight className="h-4 w-4" />
                     </Link>
                 ) : (

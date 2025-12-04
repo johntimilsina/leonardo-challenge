@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useTransition, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/contexts'
 import { fetchCharacters } from '@/app/actions/characters'
 import { CharacterCard, type BaseCharacter } from './card'
@@ -22,6 +23,31 @@ interface CharactersResponse {
 interface CharacterListProps {
     /** Current page number for pagination */
     page: number
+}
+
+/** Parse filters from URL search params */
+function parseFiltersFromParams(searchParams: URLSearchParams): CharacterFilters {
+    const filters: CharacterFilters = {}
+    const name = searchParams.get('name')
+    const status = searchParams.get('status')
+    const species = searchParams.get('species')
+    const gender = searchParams.get('gender')
+    if (name) filters.name = name
+    if (status) filters.status = status
+    if (species) filters.species = species
+    if (gender) filters.gender = gender
+    return filters
+}
+
+/** Build URL search params string from filters */
+function buildFilterParams(filters: CharacterFilters): string {
+    const params = new URLSearchParams()
+    if (filters.name) params.set('name', filters.name)
+    if (filters.status) params.set('status', filters.status)
+    if (filters.species) params.set('species', filters.species)
+    if (filters.gender) params.set('gender', filters.gender)
+    const str = params.toString()
+    return str ? `?${str}` : ''
 }
 
 function CharacterCardSkeleton() {
@@ -58,14 +84,16 @@ function CharacterListSkeleton() {
  * Uses Next.js Server Actions for data fetching.
  */
 export function CharacterList({ page }: CharacterListProps) {
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const { isAuthenticated, isLoading: isUserLoading } = useUser()
     const [selectedCharacterIndex, setSelectedCharacterIndex] = useState<number | null>(null)
-    const [filters, setFilters] = useState<CharacterFilters>({})
     const [data, setData] = useState<CharactersResponse | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
-    // Fetch characters using Server Action
+    const filters = useMemo(() => parseFiltersFromParams(searchParams), [searchParams])
+
     useEffect(() => {
         if (!isAuthenticated || isUserLoading) return
 
@@ -86,8 +114,9 @@ export function CharacterList({ page }: CharacterListProps) {
     , [data])
 
     const handleFilterChange = useCallback((newFilters: CharacterFilters) => {
-        setFilters(newFilters)
-    }, [])
+        const params = buildFilterParams(newFilters)
+        router.push(`/information/1${params}`)
+    }, [router])
 
     const selectedCharacter = selectedCharacterIndex !== null ? characters[selectedCharacterIndex] : null
 
@@ -177,6 +206,7 @@ export function CharacterList({ page }: CharacterListProps) {
                                 info={info}
                                 currentPage={page}
                                 basePath="/information"
+                                queryString={buildFilterParams(filters)}
                             />
                         </div>
                     )}
